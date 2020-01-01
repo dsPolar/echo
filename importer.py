@@ -13,15 +13,79 @@ from pathlib import Path
 
 from dataset import UrbanSound8KDataset
 
+
+
+torch.backends.cudnn.benchmark = True
+
+parser = argparse.ArgumentParser(
+    description="Train a simple CNN on CIFAR-10",
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+)
+default_dataset_dir = Path.home() / ".cache" / "torch" / "datasets"
+parser.add_argument("--dataset-root", default=default_dataset_dir)
+parser.add_argument("--log-dir", default=Path("logs"), type=Path)
+parser.add_argument("--learning-rate", default=1e-2, type=float, help="Learning rate")
+parser.add_argument("--data-aug-hflip", action="store_true")
+parser.add_argument("--data-aug-brightness", default=0, type=float)
+parser.add_argument("--data-aug-rotation", default=0, type=float)
+parser.add_argument("--dropout", default=0, type=float)
+parser.add_argument(
+    "--batch-size",
+    default=32,
+    type=int,
+    help="Number of images within each mini-batch",
+)
+parser.add_argument(
+    "--epochs",
+    default=20,
+    type=int,
+    help="Number of epochs (passes through the entire dataset) to train for",
+)
+parser.add_argument(
+    "--val-frequency",
+    default=2,
+    type=int,
+    help="How frequently to test the model on the validation set in number of epochs",
+)
+parser.add_argument(
+    "--log-frequency",
+    default=10,
+    type=int,
+    help="How frequently to save logs to tensorboard in number of steps",
+)
+parser.add_argument(
+    "--print-frequency",
+    default=10,
+    type=int,
+    help="How frequently to print progress to the command line in number of steps",
+)
+parser.add_argument(
+    "-j",
+    "--worker-count",
+    default=cpu_count(),
+    type=int,
+    help="Number of worker processes used to load data.",
+)
+parser.add_argument(
+    "--mode",
+    default='LMC',
+    type=string,
+    help="LMC, MC, MLMC",
+)
+
+
+
+
+
 train_loader = torch.utils.data.DataLoader(
       UrbanSound8KDataset(‘UrbanSound8K_train.pkl’, mode),
-      batch_size=32, shuffle=True,
-      num_workers=8, pin_memory=True)
+      batch_size=args.batch_size, shuffle=True,
+      num_workers=args.worker_count, pin_memory=True)
 
 val_loader = torch.utils.data.DataLoader(
      UrbanSound8KDataset(‘UrbanSound8K_test.pkl’, mode),
-     batch_size=32, shuffle=False,
-     num_workers=8, pin_memory=True)
+     batch_size=args.batch_size, shuffle=False,
+     num_workers=args.worker_count, pin_memory=True)
 
 
 class CNN(nn.Module):
@@ -123,6 +187,7 @@ class CNN(nn.Module):
             nn.init.zeros_(layer.bias)
         if hasattr(layer, "weight"):
             nn.init.kaiming_normal_(layer.weight)
+
 
 
 for i, (input, target, filename) in enumerate(train_loader):
