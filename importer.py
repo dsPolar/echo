@@ -36,8 +36,8 @@ class CNN(nn.Module):
             in_channels=self.input_shape.channels,
             out_channels=32,
             kernel_size=(3, 3),
-            stride=(2, 2),
-            padding=(2, 2),
+            stride=(1, 1),
+            padding=(1, 1),
         )
         self.initialise_layer(self.conv1)
 
@@ -49,8 +49,8 @@ class CNN(nn.Module):
             in_channels = 32,
             out_channels = 64,
             kernel_size = (3,3),
-            stride = (2,2),
-            padding = (2,2),
+            stride = (1,1),
+            padding = (1,1),
         )
         self.initialise_layer(self.conv2)
 
@@ -64,8 +64,8 @@ class CNN(nn.Module):
             in_channels = 64,
             out_channels = 64,
             kernel_size = (3,3),
-            stride = (2,2),
-            padding = (2,2),
+            stride = (1,1),
+            padding = (1,1),
         )
 
         self.initialise_layer(self.conv3)
@@ -77,9 +77,9 @@ class CNN(nn.Module):
         self.conv4 = nn.Conv2d(
             in_channels = 64,
             out_channels = 64,
-            kernel_size = (3,3)
-            stride = (2,2),
-            padding = (2,2),
+            kernel_size = (3,3),
+            stride = (1,1),
+            padding = (1,1),
         )
         self.initialise_layer(self.conv4)
 
@@ -88,8 +88,9 @@ class CNN(nn.Module):
         )
 
         self.pool4 = nn.MaxPool2d(kernel_size= (2,2), stride = (2,2))
-        # VAL = Size after pool
-        self.hfc = nn.Linear(VAL,1024)
+        # 15488 = 11x22x64
+        # Shape after pool4
+        self.hfc = nn.Linear(15488,1024)
 
         self.fc1 = nn.Linear(1024, 10)
         self.initialise_layer(self.fc1)
@@ -111,7 +112,8 @@ class CNN(nn.Module):
 
         x = torch.flatten(x, start_dim=1)
         #ReLU or sigmoid here is up for debate since it is not included in paper
-        x = F.relu(self.hfc(x))
+        #Going with sigmoid to match fc1
+        x = F.sigmoid(self.hfc(x))
         x = F.sigmoid(self.fc1(x))
         return x
 
