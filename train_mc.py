@@ -14,6 +14,8 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 
+from dataset import UrbanSound8KDataset
+
 import argparse
 from pathlib import Path
 
@@ -96,32 +98,18 @@ def main(args):
     torchvision.transforms.RandomHorizontalFlip(),
     torchvision.transforms.ToTensor(),
     ])
-    args.dataset_root.mkdir(parents=True, exist_ok=True)
-    if(args.data_aug_hflip):
-        train_dataset = torchvision.datasets.CIFAR10(
-            args.dataset_root, train=True, download=True, transform=transform_flip
-        )
-    else:
-        train_dataset = torchvision.datasets.CIFAR10(
-            args.dataset_root, train=True, download=True, transform=transform
-        )
+    #args.dataset_root.mkdir(parents=True, exist_ok=True)
 
-    test_dataset = torchvision.datasets.CIFAR10(
-        args.dataset_root, train=False, download=False, transform=transform
-    )
     train_loader = torch.utils.data.DataLoader(
-        train_dataset,
-        shuffle=True,
-        batch_size=args.batch_size,
-        pin_memory=True,
-        num_workers=args.worker_count,
+          UrbanSound8KDataset(‘UrbanSound8K_train.pkl’, mode),
+          batch_size=32, shuffle=True,
+          num_workers=8, pin_memory=True
     )
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset,
-        shuffle=False,
-        batch_size=args.batch_size,
-        num_workers=args.worker_count,
-        pin_memory=True,
+
+    val_loader = torch.utils.data.DataLoader(
+         UrbanSound8KDataset(‘UrbanSound8K_test.pkl’, mode),
+         batch_size=32, shuffle=False,
+         num_workers=8, pin_memory=True
     )
 
     model = CNN(height=32, width=32, channels=3, class_count=10, dropout=args.dropout)
@@ -142,7 +130,7 @@ def main(args):
             flush_secs=5
     )
     trainer = Trainer(
-        model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE
+        model, train_loader, val_loader, criterion, optimizer, summary_writer, DEVICE
     )
 
     trainer.train(
@@ -283,6 +271,10 @@ class Trainer:
         start_epoch: int = 0
     ):
         self.model.train()
+
+        #for i, (input, target, filename) in enumerate(train_loader):
+
+
         for epoch in range(start_epoch, epochs):
             self.model.train()
             data_load_start_time = time.time()
@@ -367,6 +359,9 @@ class Trainer:
         results = {"preds": [], "labels": []}
         total_loss = 0
         self.model.eval()
+
+
+        #for i, (input, target, filename) in enumerate(val_loader):
 
         # No need to track gradients for validation, we're not optimizing.
         with torch.no_grad():
