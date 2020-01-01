@@ -127,7 +127,7 @@ def main(args):
     model = CNN(height=32, width=32, channels=3, class_count=10, dropout=args.dropout)
 
     lmcnet = CNN(height=85, width=41, channels=3, class_count=10, dropout=args.dropout)
-    emcnet = CNN(height=85, width=41, channels=3, class_count=10, dropout=args.dropout)
+    mcnet  = CNN(height=85, width=41, channels=3, class_count=10, dropout=args.dropout)
 
     ## TASK 8: Redefine the criterion to be softmax cross entropy
     criterion = nn.CrossEntropyLoss()
@@ -175,10 +175,7 @@ class CNN(nn.Module):
         self.norm1 = nn.BatchNorm2d(
             num_features=32,
         )
-        #self.initialise_layer(self.norm1)
 
-        #self.pool1 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
-        ## TASK 2-1: Define the second convolutional layer and initialise its parameters
         self.conv2 = nn.Conv2d(
             in_channels = 32,
             out_channels = 64,
@@ -191,9 +188,7 @@ class CNN(nn.Module):
         self.norm2 = nn.BatchNorm2d(
             num_features=64,
         )
-        #self.initialise_layer(self.norm2)
 
-        ## TASK 3-1: Define the second pooling layer
         self.pool2 = nn.MaxPool2d(kernel_size = (2,2), stride = (2,2))
 
         self.conv3 = nn.Conv2d(
@@ -223,8 +218,10 @@ class CNN(nn.Module):
             num_features = 64,
         )
 
+        self.pool4 = nn.MaxPool2d(kernel_size= (2,2), stride = (2,2))
+        # VAL = Size after pool
+        self.hfc = nn.Linear(VAL,1024)
 
-        ## TASK 5-1: Define the first FC layer and initialise its parameters
         self.fc1 = nn.Linear(1024, 10)
         self.initialise_layer(self.fc1)
 
@@ -232,11 +229,8 @@ class CNN(nn.Module):
     def forward(self, images: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.conv1(images))
         x = self.norm1(x)
-
-        ## TASK 2-2: Pass x through the second convolutional layer
         x = F.relu(self.conv2(self.dropout(x)))
         x = self.norm2(x)
-        ## TASK 3-2: Pass x through the second pooling layer
         x = self.pool2(x)
 
         x = F.relu(self.conv3(x))
@@ -244,10 +238,11 @@ class CNN(nn.Module):
 
         x = F.relu(self.conv4(self.dropout(x)))
         x = self.norm4(x)
-        ## TASK 4: Flatten the output of the pooling layer so it is of shape
-        ##         (batch_size, 4096)
+        x = self.pool4(x)
+
         x = torch.flatten(x, start_dim=1)
-        ## TASK 5-2: Pass x through the first fully connected layer
+        #ReLU or sigmoid here is up for debate since it is not included in paper
+        x = F.relu(self.hfc(x))
         x = F.sigmoid(self.fc1(x))
         return x
 
