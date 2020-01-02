@@ -192,12 +192,12 @@ class CNN(nn.Module):
 
 def main(args):
     train_loader = torch.utils.data.DataLoader(
-          UrbanSound8KDataset(‘UrbanSound8K_train.pkl’, mode),
+          UrbanSound8KDataset("UrbanSound8K_train.pkl", mode),
           batch_size=args.batch_size, shuffle=True,
           num_workers=args.worker_count, pin_memory=True)
 
     val_loader = torch.utils.data.DataLoader(
-         UrbanSound8KDataset(‘UrbanSound8K_test.pkl’, mode),
+         UrbanSound8KDataset("UrbanSound8K_test.pkl", mode),
          batch_size=args.batch_size, shuffle=False,
          num_workers=args.worker_count, pin_memory=True)
 
@@ -219,7 +219,7 @@ def main(args):
     model = model.to(DEVICE)
 
     # Run training for all epochs, validation as expected
-    for epoch in range(0:args.epochs):
+    for epoch in range(0,args.epochs):
         print("Epoch : " + str(epoch+1))
         trainer(train_loader, model, criterion, args.val_frequency, DEVICE)
 
