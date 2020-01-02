@@ -204,6 +204,7 @@ def main(args):
     # Cross entropy loss as declared
     criterion = nn.CrossEntropyLoss()
     # Using SGD with momentum as declared
+    # Torch implemenation of optim.SGD includes L2 Reg as base
     optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=args.momentum)
     # Get mode from args, LMC, MC, or MLMC expected
     mode = args.mode
