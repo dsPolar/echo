@@ -220,14 +220,14 @@ def main(args):
     # Run training for all epochs, validation as expected
     for epoch in range(0:args.epochs):
         print("Epoch : " + str(epoch+1))
-        trainer(train_loader, val_loader, model, args.val_frequency, DEVICE)
+        trainer(train_loader, model, criterion, args.val_frequency, DEVICE)
 
         if(epoch+1 % val_frequency == 0):
-            validate(val_loader, model, device)
+            validate(val_loader, model, criterion, DEVICE)
 
 
 # Training function for an epoch
-def trainer(train_loader, val_loader, model, val_frequency, device):
+def trainer(train_loader, model, criterion, val_frequency, device):
     #Put model into training mode
     model.train()
 
@@ -244,7 +244,7 @@ def trainer(train_loader, val_loader, model, val_frequency, device):
         optimizer.zero_grad()
 
 # Validation function
-def validate(val_loader, model, device):
+def validate(val_loader, model, criterion, device):
     results = {"preds": [], "labels": []}
     total_loss = 0
 
