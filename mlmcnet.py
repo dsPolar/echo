@@ -39,7 +39,8 @@ parser = argparse.ArgumentParser(
 default_dataset_dir = Path.home() / ".cache" / "torch" / "datasets"
 parser.add_argument("--dataset-root", default=default_dataset_dir)
 parser.add_argument("--log-dir", default=Path("logs"), type=Path)
-parser.add_argument("--learning-rate", default=1e-2, type=float, help="Learning rate")
+parser.add_argument("--learning-rate", default=1e-3, type=float, help="Learning rate")
+parser.add_argument("--momentum", default=0.9, type=float, help="Momentum Value")
 parser.add_argument("--data-aug-hflip", action="store_true")
 parser.add_argument("--data-aug-brightness", default=0, type=float)
 parser.add_argument("--data-aug-rotation", default=0, type=float)
@@ -200,8 +201,11 @@ def main(args):
          batch_size=args.batch_size, shuffle=False,
          num_workers=args.worker_count, pin_memory=True)
 
+    # Cross entropy loss as declared
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=args.learning_rate)
+    # Using SGD with momentum as declared
+    optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=args.momentum)
+    # Get mode from args, LMC, MC, or MLMC expected
     mode = args.mode
     if(mode == 'LMC'):
         model = CNN(height=85, width=41, channels=3, class_count=10, dropout=args.dropout)
@@ -213,16 +217,25 @@ def main(args):
 
     model = model.to(DEVICE)
 
+    # Run training for all epochs, validation as expected
     for epoch in range(0:args.epochs):
-        trainer(train_loader, model, DEVICE)
+        print("Epoch : " + str(epoch+1))
+        trainer(train_loader, val_loader, model, args.val_frequency, DEVICE)
 
-    #for i, (input, target, filename) in enumerate(val_loader):
-    #           validation code
+        if(epoch+1 % val_frequency == 0):
+            validate(val_loader, model, device)
 
-def trainer(train_loader, model, device):
+
+# Training function for an epoch
+def trainer(train_loader, val_loader, model, val_frequency, device):
+    #Put model into training mode
+    model.train()
+
     for i, (input, target, filename) in enumerate(train_loader):
+        # Move stuff to cuda
         input = input.to(device)
         target = target.to(device)
+
         logits = model.forward(input)
 
         loss = criterion(logits,target)
@@ -230,144 +243,35 @@ def trainer(train_loader, model, device):
         optimizer.step()
         optimizer.zero_grad()
 
-        with torch.no_grad():
-            preds = logits.argmax(-1)
-            accuracy = compute_accuracy(labels, preds)
+# Validation function
+def validate(val_loader, model, device):
+    results = {"preds": [], "labels": []}
+    total_loss = 0
 
-        if(epoch+1 % val_frequency == 0):
-            validate()
+    # Put model into evaluation mode
+    model.eval()
 
-class Trainer:
-    def __init__(
-        self,
-        model: nn.Module,
-        train_loader: DataLoader,
-        val_loader: DataLoader,
-        criterion: nn.Module,
-        optimizer: Optimizer,
-        summary_writer: SummaryWriter,
-        device: torch.device,
-    ):
-        self.model = model.to(device)
-        self.device = device
-        self.train_loader = train_loader
-        self.val_loader = val_loader
-        self.criterion = criterion
-        self.optimizer = optimizer
-        self.summary_writer = summary_writer
-        self.step = 0
+    with torch.no_grad():
+        for i, (input, target, filename) in enumerate(val_loader):
+            # Move stuff to cuda
+            input = input.to(device)
+            target = target.to(device)
 
-    def train(
-        self,
-        epochs: int,
-        val_frequency: int,
-        print_frequency: int = 20,
-        log_frequency: int = 5,
-        start_epoch: int = 0
-    ):
-        self.model.train()
-        for epoch in range(start_epoch, epochs):
-            self.model.train()
-            data_load_start_time = time.time()
-            for batch, labels in self.train_loader:
-                batch = batch.to(self.device)
-                labels = labels.to(self.device)
-                data_load_end_time = time.time()
+            logits = model(input)
+            loss = criterion(logits,target)
+            total_loss += loss.item()
+            preds = logits.argmax(dim=-1).cpu().numpy()
+            results["preds"].extend(list(preds))
+            results["labels"].extend(list(target.cpu().numpy()))
+
+    accuracy = compute_accuracy(
+        np.array(results["labels"]), np.array(results["preds"])
+    )
+    average_loss = total_loss / val_loader.len()
+
+    print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
 
 
-                ## TASK 1: Compute the forward pass of the model, print the output shape
-                ##         and quit the program
-                logits = self.model.forward(batch)
-
-
-                ## TASK 7: Rename `output` to `logits`, remove the output shape printing
-                ##         and get rid of the `import sys; sys.exit(1)`
-
-                ## TASK 9: Compute the loss using self.criterion and
-                ##         store it in a variable called `loss`
-                loss = self.criterion(logits, labels)
-
-                ## TASK 10: Compute the backward pass
-                loss.backward()
-
-                ## TASK 12: Step the optimizer and then zero out the gradient buffers.
-                self.optimizer.step()
-                self.optimizer.zero_grad()
-
-                with torch.no_grad():
-                    preds = logits.argmax(-1)
-                    accuracy = compute_accuracy(labels, preds)
-
-                data_load_time = data_load_end_time - data_load_start_time
-                step_time = time.time() - data_load_end_time
-                if ((self.step + 1) % log_frequency) == 0:
-                    self.log_metrics(epoch, accuracy, loss, data_load_time, step_time)
-                if ((self.step + 1) % print_frequency) == 0:
-                    self.print_metrics(epoch, accuracy, loss, data_load_time, step_time)
-
-                self.step += 1
-                data_load_start_time = time.time()
-
-            self.summary_writer.add_scalar("epoch", epoch, self.step)
-            if ((epoch + 1) % val_frequency) == 0:
-                self.validate()
-                # self.validate() will put the model in validation mode,
-                # so we have to switch back to train mode afterwards
-                self.model.train()
-
-    def print_metrics(self, epoch, accuracy, loss, data_load_time, step_time):
-        epoch_step = self.step % len(self.train_loader)
-        print(
-                f"epoch: [{epoch}], "
-                f"step: [{epoch_step}/{len(self.train_loader)}], "
-                f"batch loss: {loss:.5f}, "
-                f"batch accuracy: {accuracy * 100:2.2f}, "
-                f"data load time: "
-                f"{data_load_time:.5f}, "
-                f"step time: {step_time:.5f}"
-        )
-
-    def log_metrics(self, epoch, accuracy, loss, data_load_time, step_time):
-        self.summary_writer.add_scalar("epoch", epoch, self.step)
-        self.summary_writer.add_scalars(
-                "accuracy",
-                {"train": accuracy},
-                self.step
-        )
-        self.summary_writer.add_scalars(
-                "loss",
-                {"train": float(loss.item())},
-                self.step
-        )
-        self.summary_writer.add_scalar(
-                "time/data", data_load_time, self.step
-        )
-        self.summary_writer.add_scalar(
-                "time/data", step_time, self.step
-        )
-
-    def validate(self):
-        results = {"preds": [], "labels": []}
-        total_loss = 0
-        self.model.eval()
-
-        # No need to track gradients for validation, we're not optimizing.
-        with torch.no_grad():
-            for batch, labels in self.val_loader:
-                batch = batch.to(self.device)
-                labels = labels.to(self.device)
-                logits = self.model(batch)
-                loss = self.criterion(logits, labels)
-                total_loss += loss.item()
-                preds = logits.argmax(dim=-1).cpu().numpy()
-                results["preds"].extend(list(preds))
-                results["labels"].extend(list(labels.cpu().numpy()))
-
-        accuracy = compute_accuracy(
-            np.array(results["labels"]), np.array(results["preds"])
-        )
-        average_loss = total_loss / len(self.val_loader)
-        print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
 
 
 
