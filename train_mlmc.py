@@ -383,16 +383,16 @@ class Trainer:
                 {"test": average_loss},
                 self.step
         )
-        print("airplane", perclass[0])
-        print("automobile", perclass[1])
-        print("bird", perclass[2])
-        print("cat", perclass[3])
-        print("deer", perclass[4])
-        print("dog", perclass[5])
-        print("frog", perclass[6])
-        print("horse", perclass[7])
-        print("ship", perclass[8])
-        print("truck", perclass[9])
+        print("AC Unit", perclass[0])
+        print("Car Horn", perclass[1])
+        print("Children", perclass[2])
+        print("Dog Bark", perclass[3])
+        print("Drilling", perclass[4])
+        print("Engine Idle", perclass[5])
+        print("Gunshot", perclass[6])
+        print("Jackhammer", perclass[7])
+        print("Siren", perclass[8])
+        print("Street Music", perclass[9])
         print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
 
 
