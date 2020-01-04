@@ -17,3 +17,8 @@ the following
 2. The resulting 11x22 shape with 64 kernels can be flattened to a 15488
 3. This 15488 is fully connected to the 1024 fc1 layer (yielding 15.85 mill params)
 4. The 1024 layer then connects down to 10 for the classes as declared in paper
+
+
+Update 4/1/20
+Just moved the code over from mlmcnet that I worked on as an attempt without the
+foundations of train_cifar.py
