@@ -222,14 +222,12 @@ class CNN(nn.Module):
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.conv1(images))
-        print(x.size())
         # 85x41x32 here
 
         x = self.norm1(x)
         x = F.relu(self.conv2(self.dropout(x)))
         x = self.norm2(x)
         x = self.pool2(x)
-        print(x.size())
         # 42x20x64 here
 
         x = F.relu(self.conv3(x))
@@ -238,15 +236,13 @@ class CNN(nn.Module):
         x = F.relu(self.conv4(self.dropout(x)))
         x = self.norm4(x)
         x = self.pool4(x)
-        print(x.size())
         # 21x10x64 here
 
         x = torch.flatten(x, start_dim=1)
-        print(x.size())
         #ReLU or sigmoid here is up for debate since it is not included in paper
         #Going with sigmoid to match fc1
-        x = F.sigmoid(self.hfc(x))
-        x = F.sigmoid(self.fc1(x))
+        x = torch.sigmoid(self.hfc(x))
+        x = torch.sigmoid(self.fc1(x))
         return x
 
     @staticmethod
