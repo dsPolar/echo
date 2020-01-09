@@ -90,6 +90,7 @@ else:
 
 
 def main(args):
+    mode = args.mode
 
     train_loader = torch.utils.data.DataLoader(
           UrbanSound8KDataset("UrbanSound8K_train.pkl", mode),
@@ -107,7 +108,6 @@ def main(args):
     ## TASK 11: Define the optimizer
     optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
 
-    mode = args.mode
     if(mode == 'LMC'):
         model = CNN(height=85, width=41, channels=3, class_count=10, dropout=args.dropout)
     elif(mode == 'MC'):
