@@ -73,7 +73,6 @@ parser.add_argument(
 parser.add_argument(
     "--mode",
     default='LMC',
-    type=string,
     help="LMC, MC, MLMC",
 )
 
