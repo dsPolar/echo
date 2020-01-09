@@ -106,9 +106,9 @@ def main(args):
 
 
     if(mode == 'LMC'):
-        model = CNN(height=85, width=41, channels=3, class_count=10, dropout=args.dropout)
+        model = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout)
     elif(mode == 'MC'):
-        model = CNN(height=85, width=41, channels=3, class_count=10, dropout=args.dropout)
+        model = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout)
 
     optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
 
@@ -157,7 +157,7 @@ class CNN(nn.Module):
 
         self.conv2 = nn.Conv2d(
             in_channels = 32,
-            out_channels = 64,
+            out_channels = 32,
             kernel_size = (3,3),
             stride = (1,1),
             padding = (1,1),
@@ -165,13 +165,13 @@ class CNN(nn.Module):
         self.initialise_layer(self.conv2)
 
         self.norm2 = nn.BatchNorm2d(
-            num_features=64,
+            num_features=32,
         )
 
         self.pool2 = nn.MaxPool2d(kernel_size = (2,2), stride = (2,2))
 
         self.conv3 = nn.Conv2d(
-            in_channels = 64,
+            in_channels = 32,
             out_channels = 64,
             kernel_size = (3,3),
             stride = (1,1),
@@ -212,6 +212,8 @@ class CNN(nn.Module):
         x = F.relu(self.conv2(self.dropout(x)))
         x = self.norm2(x)
         x = self.pool2(x)
+        print(x.size())
+        # 42x20x64 here
 
         x = F.relu(self.conv3(x))
         x = self.norm3(x)
@@ -219,8 +221,11 @@ class CNN(nn.Module):
         x = F.relu(self.conv4(self.dropout(x)))
         x = self.norm4(x)
         x = self.pool4(x)
+        print(x.size())
+        # 21x10x64 here
 
         x = torch.flatten(x, start_dim=1)
+        print(x.size())
         #ReLU or sigmoid here is up for debate since it is not included in paper
         #Going with sigmoid to match fc1
         x = F.sigmoid(self.hfc(x))

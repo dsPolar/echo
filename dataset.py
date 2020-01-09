@@ -17,9 +17,9 @@ class UrbanSound8KDataset(data.Dataset):
             lm = self.dataset[index]['features']['logmelspec']
             chroma = self.dataset[index]['features']['chroma']
             speccon = self.dataset[index]['features']['spectral_contrast']
-            tonnetz = self.dataset[index]['features']['Tonnetz']
+            tonnetz = self.dataset[index]['features']['tonnetz']
 
-            feature = np.concatenate(lm,chroma,speccon,tonnetz, axis=0)
+            feature = np.concatenate((lm,chroma,speccon,tonnetz), axis=0)
 
             # Edit here to load and concatenate the neccessary features to
             # create the LMC feature
@@ -28,9 +28,9 @@ class UrbanSound8KDataset(data.Dataset):
             mc = self.dataset[index]['features']['mfcc']
             chroma = self.dataset[index]['features']['chroma']
             speccon = self.dataset[index]['features']['spectral_contrast']
-            tonnetz = self.dataset[index]['features']['Tonnetz']
+            tonnetz = self.dataset[index]['features']['tonnetz']
 
-            feature = np.concatenate(mc,chroma,speccon,tonnetz, axis=0)
+            feature = np.concatenate((mc,chroma,speccon,tonnetz), axis=0)
             # Edit here to load and concatenate the neccessary features to
             # create the MC feature
             feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0)
@@ -39,9 +39,9 @@ class UrbanSound8KDataset(data.Dataset):
             mc = self.dataset[index]['features']['mfcc']
             chroma = self.dataset[index]['features']['chroma']
             speccon = self.dataset[index]['features']['spectral_contrast']
-            tonnetz = self.dataset[index]['features']['Tonnetz']
+            tonnetz = self.dataset[index]['features']['tonnetz']
 
-            feature = np.concatenate(lm,mc,chroma,speccon,tonnetz, axis=0)
+            feature = np.concatenate((lm,mc,chroma,speccon,tonnetz), axis=0)
             # Edit here to load and concatenate the neccessary features to
             # create the MLMC feature
             feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0)
