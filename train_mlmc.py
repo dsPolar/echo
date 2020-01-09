@@ -102,16 +102,17 @@ def main(args):
          batch_size=args.batch_size, shuffle=False,
          num_workers=args.worker_count, pin_memory=True)
 
-    ## TASK 8: Redefine the criterion to be softmax cross entropy
     criterion = nn.CrossEntropyLoss()
 
-    ## TASK 11: Define the optimizer
-    optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
 
     if(mode == 'LMC'):
         model = CNN(height=85, width=41, channels=3, class_count=10, dropout=args.dropout)
     elif(mode == 'MC'):
         model = CNN(height=85, width=41, channels=3, class_count=10, dropout=args.dropout)
+
+    optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
+
+
 
     log_dir = get_summary_writer_log_dir(args)
     print(f"Writing logs to {log_dir}")
