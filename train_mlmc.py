@@ -106,9 +106,12 @@ def main(args):
 
 
     if(mode == 'LMC'):
-        model = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout)
+        model = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=1)
     elif(mode == 'MC'):
-        model = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout)
+        model = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=2)
+    elif(mode == 'MLMC'):
+        model = CNN(height=145, width=41, channels=1, class_count=10, dropout=args.dropout, mode=3)
+
 
     optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
 
@@ -135,10 +138,11 @@ def main(args):
 
 
 class CNN(nn.Module):
-    def __init__(self, height: int, width: int, channels: int, class_count: int, dropout: float):
+    def __init__(self, height: int, width: int, channels: int, class_count: int, dropout: float, mode: int):
         super().__init__()
         self.input_shape = ImageShape(height=height, width=width, channels=channels)
         self.class_count = class_count
+        self.mode = mode
 
         self.dropout = nn.Dropout(p=dropout)
 
@@ -199,8 +203,18 @@ class CNN(nn.Module):
 
         self.pool4 = nn.MaxPool2d(kernel_size= (2,2), stride = (2,2))
         # 15488 = 11x22x64
-        # Shape after pool4
-        self.hfc = nn.Linear(15488,1024)
+        # Shape after pool4 if round up
+
+        # 13440 = 10*21*64
+        # Shape after pool4 if round down
+
+        # 23040 = 10*36*64
+        # Shape after pool4 if MLMC Combined set
+        if((mode == 1) or (mode == 2)):
+            linear = 13440
+        else:
+            linear = 23040
+        self.hfc = nn.Linear(linear,1024)
         self.initialise_layer(self.hfc)
 
         self.fc1 = nn.Linear(1024, 10)
@@ -208,6 +222,9 @@ class CNN(nn.Module):
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.conv1(images))
+        print(x.size())
+        # 85x41x32 here
+
         x = self.norm1(x)
         x = F.relu(self.conv2(self.dropout(x)))
         x = self.norm2(x)
