@@ -11,7 +11,6 @@ from torch.nn import functional as F
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torchvision import transforms
 
 from dataset import UrbanSound8KDataset
 
