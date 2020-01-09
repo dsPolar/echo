@@ -14,10 +14,10 @@ class UrbanSound8KDataset(data.Dataset):
 
     def __getitem__(self, index):
         if self.mode == 'LMC':
-            lm = self.dataset['features']['logmelspec']
-            chroma = self.dataset['features']['chroma']
-            speccon = self.dataset['features']['spectral_contrast']
-            tonnetz = self.dataset['features']['Tonnetz']
+            lm = self.dataset[index]['features']['logmelspec']
+            chroma = self.dataset[index]['features']['chroma']
+            speccon = self.dataset[index]['features']['spectral_contrast']
+            tonnetz = self.dataset[index]['features']['Tonnetz']
 
             feature = np.concatenate(lm,chroma,speccon,tonnetz, axis=0)
 
@@ -25,21 +25,21 @@ class UrbanSound8KDataset(data.Dataset):
             # create the LMC feature
             feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0)
         elif self.mode == 'MC':
-            mc = self.dataset['features']['mfcc']
-            chroma = self.dataset['features']['chroma']
-            speccon = self.dataset['features']['spectral_contrast']
-            tonnetz = self.dataset['features']['Tonnetz']
+            mc = self.dataset[index]['features']['mfcc']
+            chroma = self.dataset[index]['features']['chroma']
+            speccon = self.dataset[index]['features']['spectral_contrast']
+            tonnetz = self.dataset[index]['features']['Tonnetz']
 
             feature = np.concatenate(mc,chroma,speccon,tonnetz, axis=0)
             # Edit here to load and concatenate the neccessary features to
             # create the MC feature
             feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0)
         elif self.mode == 'MLMC':
-            lm = self.dataset['features']['logmelspec']
-            mc = self.dataset['features']['mfcc']
-            chroma = self.dataset['features']['chroma']
-            speccon = self.dataset['features']['spectral_contrast']
-            tonnetz = self.dataset['features']['Tonnetz']
+            lm = self.dataset[index]['features']['logmelspec']
+            mc = self.dataset[index]['features']['mfcc']
+            chroma = self.dataset[index]['features']['chroma']
+            speccon = self.dataset[index]['features']['spectral_contrast']
+            tonnetz = self.dataset[index]['features']['Tonnetz']
 
             feature = np.concatenate(lm,mc,chroma,speccon,tonnetz, axis=0)
             # Edit here to load and concatenate the neccessary features to
