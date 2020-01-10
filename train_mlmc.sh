@@ -2,7 +2,7 @@
 #SBATCH --partition gpu
 #SBATCH --time 0-00:30
 #SBATCH --account comsm0018
-#SBATCH --mem 64GB
+#SBATCH --mem 65536MB
 #SBATCH --gres gpu:1
 
 # get rid of any modules already loaded
