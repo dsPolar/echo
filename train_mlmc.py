@@ -75,6 +75,11 @@ parser.add_argument(
     default='LMC',
     help="LMC, MC, MLMC",
 )
+parser.add_argument("--checkpoint-path", type=Path)
+parser.add_argument("--checkpoint-frequency", type=int, default=1, help="Save a checkpoint every N epochs")
+parser.add_argument("--resume-checkpoint", type=Path)
+
+
 
 
 class ImageShape(NamedTuple):
@@ -91,6 +96,11 @@ else:
 
 def main(args):
     mode = args.mode
+
+    if args.resume_checkpoint.exists():
+        state_dict = torch.load(args.resume_checkpoint)
+        print(f"Loading model from {args.resume_checkpoint}")
+        model.load_state_dict(state_dict)
 
     train_loader = torch.utils.data.DataLoader(
           UrbanSound8KDataset("UrbanSound8K_train.pkl", mode),
@@ -124,7 +134,7 @@ def main(args):
             flush_secs=5
     )
     trainer = Trainer(
-        model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE
+        model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE, args
     )
 
     trainer.train(
@@ -263,6 +273,7 @@ class Trainer:
         optimizer: Optimizer,
         summary_writer: SummaryWriter,
         device: torch.device,
+        args,
     ):
         self.model = model.to(device)
         self.device = device
@@ -272,6 +283,7 @@ class Trainer:
         self.optimizer = optimizer
         self.summary_writer = summary_writer
         self.step = 0
+        self.args = args
 
     def train(
         self,
@@ -326,10 +338,15 @@ class Trainer:
 
             self.summary_writer.add_scalar("epoch", epoch, self.step)
             if ((epoch + 1) % val_frequency) == 0:
-                self.validate()
                 # self.validate() will put the model in validation mode,
                 # so we have to switch back to train mode afterwards
+                self.validate()
                 self.model.train()
+            if (epoch + 1) % self.args.checkpoint_frequency or (epoch + 1) == epochs:
+                print(f"Saving model to {self.args.checkpoint_path}")
+                torch.save(self.model.state_dict(), self.args.checkpoint_path)
+
+
 
     def print_metrics(self, epoch, accuracy, loss, data_load_time, step_time):
         epoch_step = self.step % len(self.train_loader)
@@ -410,6 +427,11 @@ class Trainer:
         print("Siren", perclass[8])
         print("Street Music", perclass[9])
         print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
+        torch.save({
+            'args': self.args,
+            'model': model.state_dict(),
+            'accuracy': accuracy
+        }, self.args.checkpoint_path)
 
 
 
