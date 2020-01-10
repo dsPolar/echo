@@ -36,6 +36,7 @@ parser.add_argument(
     type=int,
     help="Number of images within each mini-batch",
 )
+#Dima results are at 50 epochs
 parser.add_argument(
     "--epochs",
     default=20,
@@ -72,7 +73,7 @@ parser.add_argument(
     default='LMC',
     help="LMC, MC, MLMC",
 )
-parser.add_argument("--checkpoint-path", type=Path)
+parser.add_argument("--checkpoint-path", default=Path("checkpoints"), type=Path)
 parser.add_argument("--checkpoint-frequency", type=int, default=1, help="Save a checkpoint every N epochs")
 parser.add_argument("--resume", default=0, type=int)
 parser.add_argument("--resume-checkpoint", type=Path)
