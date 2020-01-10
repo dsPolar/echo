@@ -24,14 +24,11 @@ parser = argparse.ArgumentParser(
     description="Train LMC, MC or MLMC",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
-default_dataset_dir = Path.home() / ".cache" / "torch" / "datasets"
-parser.add_argument("--dataset-root", default=default_dataset_dir)
+#default_dataset_dir = Path.home() / ".cache" / "torch" / "datasets"
+#parser.add_argument("--dataset-root", default=default_dataset_dir)
 parser.add_argument("--log-dir", default=Path("logs"), type=Path)
 parser.add_argument("--learning-rate", default=1e-3, type=float, help="Learning rate")
 parser.add_argument("--momentum", default=0.9, type=float, help="Momentum Value")
-parser.add_argument("--data-aug-hflip", action="store_true")
-parser.add_argument("--data-aug-brightness", default=0, type=float)
-parser.add_argument("--data-aug-rotation", default=0, type=float)
 parser.add_argument("--dropout", default=0, type=float)
 parser.add_argument(
     "--batch-size",
@@ -137,6 +134,8 @@ def main(args):
     trainer = Trainer(
         model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE, args
     )
+    print("EPOCHS")
+    print(args.epochs)
 
     trainer.train(
         args.epochs,
