@@ -39,7 +39,7 @@ parser.add_argument(
 #Dima results are at 50 epochs
 parser.add_argument(
     "--epochs",
-    default=20,
+    default=50,
     type=int,
     help="Number of epochs (passes through the entire dataset) to train for",
 )
@@ -73,7 +73,7 @@ parser.add_argument(
     default='LMC',
     help="LMC, MC, MLMC",
 )
-parser.add_argument("--checkpoint-path", default=Path("checkpoints"), type=Path)
+parser.add_argument("--checkpoint-path", default="checkpoints", type=Path)
 parser.add_argument("--checkpoint-frequency", type=int, default=1, help="Save a checkpoint every N epochs")
 parser.add_argument("--resume", default=0, type=int)
 parser.add_argument("--resume-checkpoint", type=Path)
