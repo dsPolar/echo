@@ -77,6 +77,7 @@ parser.add_argument(
 )
 parser.add_argument("--checkpoint-path", type=Path)
 parser.add_argument("--checkpoint-frequency", type=int, default=1, help="Save a checkpoint every N epochs")
+parser.add_argument("--resume", default=0, type=int)
 parser.add_argument("--resume-checkpoint", type=Path)
 
 
@@ -96,11 +97,11 @@ else:
 
 def main(args):
     mode = args.mode
-
-    if args.resume_checkpoint.exists():
-        state_dict = torch.load(args.resume_checkpoint)
-        print(f"Loading model from {args.resume_checkpoint}")
-        model.load_state_dict(state_dict)
+    if args.resume == 1:
+        if args.resume_checkpoint.exists():
+            state_dict = torch.load(args.resume_checkpoint)
+            print(f"Loading model from {args.resume_checkpoint}")
+            model.load_state_dict(state_dict)
 
     train_loader = torch.utils.data.DataLoader(
           UrbanSound8KDataset("UrbanSound8K_train.pkl", mode),
@@ -429,7 +430,7 @@ class Trainer:
         print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
         torch.save({
             'args': self.args,
-            'model': model.state_dict(),
+            'model': self.model.state_dict(),
             'accuracy': accuracy
         }, self.args.checkpoint_path)
 
@@ -471,9 +472,6 @@ def get_summary_writer_log_dir(args: argparse.Namespace) -> str:
       f"bs={args.batch_size}_"
       f"lr={args.learning_rate}_"
       f"momentum=0.9_"
-      f"brightness={args.data_aug_brightness}_" +
-      ("hflip_" if args.data_aug_hflip else "") +
-      f"rotation={args.data_aug_rotation}_" +
       f"run_"
     )
     i = 0
