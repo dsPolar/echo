@@ -10,4 +10,4 @@ module purge
 # load in the module dependencies for this script
 module load "languages/anaconda3/2019.07-3.6.5-tflow-1.14"
 
-python train_mlmc.py --mode LMC
+python train_mlmc.py --mode LMC --checkpoint-path ~/checkpoints/LMC/
