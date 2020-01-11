@@ -119,6 +119,9 @@ def main(args):
         model = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=2)
     elif(mode == 'MLMC'):
         model = CNN(height=145, width=41, channels=1, class_count=10, dropout=args.dropout, mode=3)
+    elif(mode == 'TSCNN'):
+        modelLMC = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=1)
+        modelMC  = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=1)
 
 
     optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
@@ -131,8 +134,9 @@ def main(args):
             str(log_dir),
             flush_secs=5
     )
+    f = open("checkpoints/" + str(mode) + ".pth", mode="wb")
     trainer = Trainer(
-        model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE, args
+        model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE, args, f
     )
     print("EPOCHS")
     print(args.epochs)
@@ -143,7 +147,7 @@ def main(args):
         print_frequency=args.print_frequency,
         log_frequency=args.log_frequency,
     )
-
+    f.close()
     summary_writer.close()
 
 
@@ -251,8 +255,8 @@ class CNN(nn.Module):
         x = torch.flatten(x, start_dim=1)
         #ReLU or sigmoid here is up for debate since it is not included in paper
         #Going with sigmoid to match fc1
-        x = torch.sigmoid(self.hfc(x))
-        x = torch.sigmoid(self.fc1(x))
+        x = torch.sigmoid(self.hfc(self.dropout(x)))
+        x = torch.sigmoid(self.fc1(self.dropout(x)))
         return x
 
     @staticmethod
@@ -274,6 +278,7 @@ class Trainer:
         summary_writer: SummaryWriter,
         device: torch.device,
         args,
+        f,
     ):
         self.model = model.to(device)
         self.device = device
@@ -284,6 +289,7 @@ class Trainer:
         self.summary_writer = summary_writer
         self.step = 0
         self.args = args
+        self.file = f
 
     def train(
         self,
@@ -430,7 +436,7 @@ class Trainer:
             'args': self.args,
             'model': self.model.state_dict(),
             'accuracy': accuracy
-        }, self.args.checkpoint_path)
+        }, self.file)
 
 
 
