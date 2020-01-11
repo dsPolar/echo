@@ -132,8 +132,9 @@ def main(args):
             str(log_dir),
             flush_secs=5
     )
+    f = open("checkpoints/" + str(mode) + ".pth", mode="wb")
     trainer = Trainer(
-        model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE, args
+        model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE, args, f
     )
     print("EPOCHS")
     print(args.epochs)
@@ -144,7 +145,7 @@ def main(args):
         print_frequency=args.print_frequency,
         log_frequency=args.log_frequency,
     )
-
+    f.close()
     summary_writer.close()
 
 
@@ -275,6 +276,7 @@ class Trainer:
         summary_writer: SummaryWriter,
         device: torch.device,
         args,
+        f,
     ):
         self.model = model.to(device)
         self.device = device
@@ -285,6 +287,7 @@ class Trainer:
         self.summary_writer = summary_writer
         self.step = 0
         self.args = args
+        self.file = f
 
     def train(
         self,
@@ -345,7 +348,7 @@ class Trainer:
                 self.model.train()
             if (epoch + 1) % self.args.checkpoint_frequency or (epoch + 1) == epochs:
                 print(f"Saving model to {self.args.checkpoint_path}")
-                torch.save(self.model.state_dict(), self.args.checkpoint_path)
+                torch.save(self.model.state_dict(), self.file)
 
 
 
@@ -432,7 +435,7 @@ class Trainer:
             'args': self.args,
             'model': self.model.state_dict(),
             'accuracy': accuracy
-        }, self.args.checkpoint_path)
+        }, self.file)
 
 
 
