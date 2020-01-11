@@ -267,7 +267,7 @@ class CNN(nn.Module):
         x = self.hfc(self.dropout(x))
         x = self.normfc(x)
         x = torch.sigmoid(x)
-        
+
         x = self.fc1(self.dropout(x))
         return x
 
