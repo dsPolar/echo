@@ -73,7 +73,7 @@ parser.add_argument(
     default='LMC',
     help="LMC, MC, MLMC",
 )
-parser.add_argument("--checkpoint-frequency", type=int, default=1, help="Save a checkpoint every N epochs")
+parser.add_argument("--checkpoint-frequency", type=int, default=10, help="Save a checkpoint every N epochs")
 parser.add_argument("--resume", default=0, type=int)
 parser.add_argument("--resume-checkpoint", type=Path)
 
@@ -121,7 +121,7 @@ def main(args):
         model = CNN(height=145, width=41, channels=1, class_count=10, dropout=args.dropout, mode=3)
     elif(mode == 'TSCNN'):
         modelLMC = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=1)
-        modelMC  = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=1)
+        modelMC  = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=2)
 
 
     optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
@@ -231,32 +231,44 @@ class CNN(nn.Module):
         self.hfc = nn.Linear(linear,1024)
         self.initialise_layer(self.hfc)
 
+        self.normfc = nn.BatchNorm1d(
+            num_features = linear
+        )
+
         self.fc1 = nn.Linear(1024, 10)
         self.initialise_layer(self.fc1)
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
-        x = F.relu(self.conv1(images))
-        # 85x41x32 here
-
+        x = self.conv1(images)
         x = self.norm1(x)
-        x = F.relu(self.conv2(self.dropout(x)))
+        x = F.relu(x)
+
+        x = self.conv2(self.dropout(x))
         x = self.norm2(x)
+        x = F.relu(x)
         x = self.pool2(x)
+
         # 42x20x64 here
 
-        x = F.relu(self.conv3(x))
+        x = self.conv3(x)
         x = self.norm3(x)
+        x = F.relu(x)
 
-        x = F.relu(self.conv4(self.dropout(x)))
+        x = self.conv4(self.dropout(x))
         x = self.norm4(x)
+        x = F.relu(x)
         x = self.pool4(x)
+
         # 21x10x64 here
 
         x = torch.flatten(x, start_dim=1)
         #ReLU or sigmoid here is up for debate since it is not included in paper
         #Going with sigmoid to match fc1
-        x = torch.sigmoid(self.hfc(self.dropout(x)))
-        x = torch.sigmoid(self.fc1(self.dropout(x)))
+        x = self.hfc(self.dropout(x))
+        x = self.normfc(x)
+        x = torch.sigmoid(x)
+        
+        x = self.fc1(self.dropout(x))
         return x
 
     @staticmethod
