@@ -167,8 +167,8 @@ def main(args):
         modelLMC = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=1)
         modelMC  = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=2)
 
-        modelLMC.load_state_dict(torch.load("checkpoints/lmc.pth"))
-        modelMC.load_state_dict(torch.load("checkpoints/mc.pth"))
+        modelLMC.load_state_dict(torch.load("checkpoints/LMC.pth"))
+        modelMC.load_state_dict(torch.load("checkpoints/MC.pth"))
 
         tscnn(modelLMC, modelMC, test_loader, DEVICE)
         exit()
