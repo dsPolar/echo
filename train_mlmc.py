@@ -91,35 +91,15 @@ if torch.cuda.is_available():
 else:
     DEVICE = torch.device("cpu")
 
-def tscnn(lmcmodel,mcmodel,val_loaderLMC, val_loaderMC, device):
-    lmcmodel = lmcmodel.to(device)
-    mcmodel  = mcmodel.to(device)
-
-    lmcmodel.eval()
-    mcmodel.eval()
+def new_tscnn(trainerLMC, trainerMC):
     results = {"preds": [], "labels": []}
-
-    with torch.no_grad():
-        # Run through LMC batch
-        for i, (batch, labels, filename) in enumerate(val_loaderLMC):
-            batch = batch.to(device)
-            #labels = labels.to(device)
-
-            logitsLMC = lmcmodel(batch)
-            softLMC = F.softmax(logitsLMC,dim=0)
-        # Run through MC batch
-        for i, (batch, labels, filename) in enumerate(val_loaderMC):
-            batch = batch.to(device)
-            labels = labels.to(device)
-
-            logitsMC = mcmodel(batch)
-            softMC = F.softmax(logitsMC,dim=0)
-        # Compute accuracy for twin network
-        softTS = torch.div((softMC+softLMC), 2.0)
-        preds = softTS.argmax(dim=-1).cpu().numpy()
-        results["preds"].extend(list(preds))
-        results["labels"].extend(list(labels.cpu().numpy()))
-
+    lmc_logits, lmc_labels = trainerLMC.validate()
+    mc_logits, mc_labels  = trainerMC.validate()
+    logits = np.add(lmc_logits, mc_logits)
+    tscnn = np.divide(logits, 2.0)
+    preds = np.argmax(tscnn, dim=-1)
+    results["preds"]  = list(preds)
+    results["labels"] = list(mc_labels.numpy())
 
     accuracy = compute_accuracy(
         np.array(results["labels"]), np.array(results["preds"])
@@ -189,13 +169,6 @@ def main(args):
         modelLMC.load_state_dict(torch.load("checkpoints/LMC.pth"))
         modelMC.load_state_dict(torch.load("checkpoints/MC.pth"))
 
-        tscnn(modelLMC, modelMC, test_loaderLMC, test_loaderMC, DEVICE)
-        exit()
-
-
-
-
-
     optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=0.0001)
 
 
@@ -207,9 +180,21 @@ def main(args):
             flush_secs=5
     )
     f = open("checkpoints/" + str(mode) + ".pth", mode="wb")
-    trainer = Trainer(
-        model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE, args, f
-    )
+    if mode == 'TSCNN':
+        trainerLMC = Trainer(
+            modelLMC, train_loader, test_loaderLMC, criterion, optimizer, summary_writer, DEVICE, args, f
+        )
+        trainerMC = Trainer(
+            modelMC, train_loader, test_loaderMC, criterion, optimizer, summary_writer, DEVICE, args, f
+        )
+        new_tscnn(trainerLMC, trainerMC)
+        summary_writer.close()
+        exit()
+    else:
+        trainer = Trainer(
+            model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE, args, f
+        )
+
     print("EPOCHS")
     print(args.epochs)
 
@@ -493,7 +478,7 @@ class Trainer:
                 loss = self.criterion(logits, labels)
                 total_loss += loss.item()
                 preds = logits.argmax(dim=-1).cpu().numpy()
-                res_logits.extend(list(logits.cpu().numpy()))
+                res_logits.extend(list(F.softmax(logits).cpu().numpy()))
                 results["preds"].extend(list(preds))
                 results["labels"].extend(list(labels.cpu().numpy()))
 
@@ -540,6 +525,8 @@ class Trainer:
             'model': self.model.state_dict(),
             'accuracy': accuracy
         }, self.file)
+
+        return res_logits.numpy(), results["labels"]
 
 
 def compute_accuracy(
