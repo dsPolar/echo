@@ -487,7 +487,7 @@ class Trainer:
                 loss = self.criterion(logits, labels)
                 total_loss += loss.item()
                 preds = logits.argmax(dim=-1).cpu().numpy()
-                res_logits.extend(list(F.softmax(logits).cpu().numpy()))
+                res_logits.extend(list(F.softmax(logits, dim=0).cpu().numpy()))
                 results["preds"].extend(list(preds))
                 results["labels"].extend(list(labels.cpu().numpy()))
 
@@ -535,7 +535,7 @@ class Trainer:
             'accuracy': accuracy
         }, self.file)
 
-        return res_logits.numpy(), results["labels"]
+        return np.array(res_logits), results["labels"]
 
 
 def compute_accuracy(
