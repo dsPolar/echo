@@ -241,7 +241,7 @@ class CNN(nn.Module):
             num_features=32,
         )
 
-        self.pool2 = nn.MaxPool2d(kernel_size = (2,2), stride = (2,2))
+        self.pool2 = nn.MaxPool2d(kernel_size = (2,2), stride = (2,2), ceil_mode=True)
 
         self.conv3 = nn.Conv2d(
             in_channels = 32,
@@ -272,7 +272,7 @@ class CNN(nn.Module):
             num_features = 64,
         )
 
-        self.pool4 = nn.MaxPool2d(kernel_size= (2,2), stride = (2,2))
+        self.pool4 = nn.MaxPool2d(kernel_size= (2,2), stride = (2,2), ceil_mode=True)
         # 15488 = 11x22x64
         # Shape after pool4 if round up
 
@@ -280,13 +280,14 @@ class CNN(nn.Module):
         # Shape after pool4 if round down
 
         # 23040 = 10*36*64
+        # 26048 = 11x37x64
         # Shape after pool4 if MLMC Combined set
         if((mode == 1) or (mode == 2)):
-            linear = 13440
+            linear = 15488
         else:
-            linear = 23040
+            linear = 26048
 
-        self.dropoutfc = nn.Dropout(p=dropout)
+        self.dropoutfc1 = nn.Dropout(p=dropout)
 
         self.hfc = nn.Linear(linear,1024)
         self.initialise_layer(self.hfc)
@@ -294,6 +295,8 @@ class CNN(nn.Module):
         self.normfc = nn.BatchNorm1d(
             num_features = 1024
         )
+
+        self.dropoutfc2 = nn.Dropout(p=dropout)
 
         self.fc1 = nn.Linear(1024, 10)
         self.initialise_layer(self.fc1)
@@ -324,11 +327,11 @@ class CNN(nn.Module):
         x = torch.flatten(x, start_dim=1)
         #ReLU or sigmoid here is up for debate since it is not included in paper
         #Going with sigmoid to match fc1
-        x = self.hfc(self.dropoutfc(x))
+        x = self.hfc(self.dropoutfc1(x))
         x = self.normfc(x)
         x = torch.sigmoid(x)
 
-        x = self.fc1(x)
+        x = self.fc1(self.dropoutfc2(x))
         return x
 
     @staticmethod
