@@ -177,7 +177,7 @@ def main(args):
 
 
 
-    optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=0.008)
 
 
 
@@ -211,7 +211,7 @@ class CNN(nn.Module):
         self.class_count = class_count
         self.mode = mode
 
-        self.dropout = nn.Dropout(p=dropout)
+
 
         self.conv1 = nn.Conv2d(
             in_channels=self.input_shape.channels,
@@ -225,6 +225,8 @@ class CNN(nn.Module):
         self.norm1 = nn.BatchNorm2d(
             num_features=32,
         )
+
+        self.dropout2 = nn.Dropout2d(p=dropout)
 
         self.conv2 = nn.Conv2d(
             in_channels = 32,
@@ -255,6 +257,8 @@ class CNN(nn.Module):
             num_features = 64,
         )
 
+        self.dropout4 = nn.Dropout2d(p=dropout)
+
         self.conv4 = nn.Conv2d(
             in_channels = 64,
             out_channels = 64,
@@ -281,6 +285,9 @@ class CNN(nn.Module):
             linear = 13440
         else:
             linear = 23040
+
+        self.dropoutfc = nn.Dropout(p=dropout)
+
         self.hfc = nn.Linear(linear,1024)
         self.initialise_layer(self.hfc)
 
@@ -296,7 +303,7 @@ class CNN(nn.Module):
         x = self.norm1(x)
         x = F.relu(x)
 
-        x = self.conv2(self.dropout(x))
+        x = self.conv2(self.dropout2(x))
         x = self.norm2(x)
         x = F.relu(x)
         x = self.pool2(x)
@@ -307,7 +314,7 @@ class CNN(nn.Module):
         x = self.norm3(x)
         x = F.relu(x)
 
-        x = self.conv4(self.dropout(x))
+        x = self.conv4(self.dropout4(x))
         x = self.norm4(x)
         x = F.relu(x)
         x = self.pool4(x)
@@ -317,11 +324,11 @@ class CNN(nn.Module):
         x = torch.flatten(x, start_dim=1)
         #ReLU or sigmoid here is up for debate since it is not included in paper
         #Going with sigmoid to match fc1
-        x = self.hfc(self.dropout(x))
+        x = self.hfc(self.dropoutfc(x))
         x = self.normfc(x)
         x = torch.sigmoid(x)
 
-        x = self.fc1(self.dropout(x))
+        x = self.fc1(x)
         return x
 
     @staticmethod
