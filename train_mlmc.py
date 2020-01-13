@@ -118,6 +118,7 @@ def tscnn(lmcmodel,mcmodel,val_loader, device):
     accuracy = compute_accuracy(
         np.array(results["labels"]), np.array(results["preds"])
     )
+    accuracy2 = np.sum(perclass)/ 10.0
     perclass = compute_perclass_accuracy(
         np.array(results["labels"]), np.array(results["preds"])
     )
@@ -132,6 +133,7 @@ def tscnn(lmcmodel,mcmodel,val_loader, device):
     print("Siren", perclass[8])
     print("Street Music", perclass[9])
     print(f"accuracy: {accuracy * 100:2.2f}")
+    print(f"accuracy perclass: {accuracy2 * 100:2.2f}")
 
 
 
