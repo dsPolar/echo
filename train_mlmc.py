@@ -480,6 +480,7 @@ class Trainer:
 
     def validate(self):
         results = {"preds": [], "labels": []}
+        res_logits = []
         total_loss = 0
         self.model.eval()
 
@@ -492,6 +493,7 @@ class Trainer:
                 loss = self.criterion(logits, labels)
                 total_loss += loss.item()
                 preds = logits.argmax(dim=-1).cpu().numpy()
+                res_logits.extend(list(logits.cpu().numpy()))
                 results["preds"].extend(list(preds))
                 results["labels"].extend(list(labels.cpu().numpy()))
 
@@ -503,6 +505,10 @@ class Trainer:
             np.array(results["labels"]), np.array(results["preds"])
         )
         accuracy2 = np.sum(perclass)/ 10.0
+
+        f = open("lmc.txt", "w")
+        print(res_logits, file=f)
+        f.close()
 
         average_loss = total_loss / len(self.val_loader)
 
