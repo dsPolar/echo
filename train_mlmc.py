@@ -91,6 +91,50 @@ if torch.cuda.is_available():
 else:
     DEVICE = torch.device("cpu")
 
+def tscnn(lmcmodel,mcmodel,val_loader, device):
+    lmcmodel = lmcmodel.to(device)
+    mcmodel  = mcmodel.to(device)
+
+    lmcmodel.eval()
+    mcmodel.eval()
+    results = {"preds": [], "labels": []}
+
+    with torch.no_grad():
+        for i, (batch,labels,filename) in enumerate(val_loader):
+            batch = batch.to(device)
+            labels = labels.to(device)
+            logitsMC = mcmodel(batch)
+            logitsLMC = lmcmodel(batch)
+
+            softMC = F.softmax(logitsMC,dim=0)
+            softLMC = F.softmax(logitsLMC,dim=0)
+
+            softTS = torch.div((softMC+softLMC), 2.0)
+
+            preds = softTS.argmax(dim=-1).cpu().numpy()
+            results["preds"].extend(list(preds))
+            results["labels"].extend(list(labels.cpu().numpy()))
+
+    accuracy = compute_accuracy(
+        np.array(results["labels"]), np.array(results["preds"])
+    )
+    perclass = compute_perclass_accuracy(
+        np.array(results["labels"]), np.array(results["preds"])
+    )
+    print("AC Unit", perclass[0])
+    print("Car Horn", perclass[1])
+    print("Children", perclass[2])
+    print("Dog Bark", perclass[3])
+    print("Drilling", perclass[4])
+    print("Engine Idle", perclass[5])
+    print("Gunshot", perclass[6])
+    print("Jackhammer", perclass[7])
+    print("Siren", perclass[8])
+    print("Street Music", perclass[9])
+    print(f"accuracy: {accuracy * 100:2.2f}")
+
+
+
 
 def main(args):
     mode = args.mode
@@ -122,6 +166,15 @@ def main(args):
     elif(mode == 'TSCNN'):
         modelLMC = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=1)
         modelMC  = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=2)
+
+        modelLMC.load_state_dict(torch.load("checkpoints/lmc.pth"))
+        modelMC.load_state_dict(torch.load("checkpoints/mc.pth"))
+
+        tscnn(modelLMC, modelMC, test_loader, DEVICE)
+        exit()
+
+
+
 
 
     optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
@@ -449,7 +502,6 @@ class Trainer:
             'model': self.model.state_dict(),
             'accuracy': accuracy
         }, self.file)
-
 
 
 def compute_accuracy(
