@@ -91,7 +91,7 @@ if torch.cuda.is_available():
 else:
     DEVICE = torch.device("cpu")
 
-def tscnn(lmcmodel,mcmodel,val_loader, device):
+def tscnn(lmcmodel,mcmodel,val_loaderLMC, val_loaderMC, device):
     lmcmodel = lmcmodel.to(device)
     mcmodel  = mcmodel.to(device)
 
@@ -100,20 +100,26 @@ def tscnn(lmcmodel,mcmodel,val_loader, device):
     results = {"preds": [], "labels": []}
 
     with torch.no_grad():
-        for i, (batch,labels,filename) in enumerate(val_loader):
+        # Run through LMC batch
+        for i, (batch, labels, filename) in enumerate(val_loaderLMC):
+            batch = batch.to(device)
+            #labels = labels.to(device)
+
+            logitsLMC = lmcmodel(batch)
+            softLMC = F.softmax(logitsLMC,dim=0)
+        # Run through MC batch
+        for i, (batch, labels, filename) in enumerate(val_loaderMC):
             batch = batch.to(device)
             labels = labels.to(device)
+
             logitsMC = mcmodel(batch)
-            logitsLMC = lmcmodel(batch)
-
             softMC = F.softmax(logitsMC,dim=0)
-            softLMC = F.softmax(logitsLMC,dim=0)
+        # Compute accuracy for twin network
+        softTS = torch.div((softMC+softLMC), 2.0)
+        preds = softTS.argmax(dim=-1).cpu().numpy()
+        results["preds"].extend(list(preds))
+        results["labels"].extend(list(labels.cpu().numpy()))
 
-            softTS = torch.div((softMC+softLMC), 2.0)
-
-            preds = softTS.argmax(dim=-1).cpu().numpy()
-            results["preds"].extend(list(preds))
-            results["labels"].extend(list(labels.cpu().numpy()))
 
     accuracy = compute_accuracy(
         np.array(results["labels"]), np.array(results["preds"])
@@ -151,10 +157,20 @@ def main(args):
           batch_size=args.batch_size, shuffle=True,
           num_workers=args.worker_count, pin_memory=True)
 
-    test_loader = torch.utils.data.DataLoader(
-         UrbanSound8KDataset("UrbanSound8K_test.pkl", mode),
-         batch_size=args.batch_size, shuffle=False,
-         num_workers=args.worker_count, pin_memory=True)
+    if(mode != 'TSCNN'):
+        test_loader = torch.utils.data.DataLoader(
+             UrbanSound8KDataset("UrbanSound8K_test.pkl", mode),
+             batch_size=args.batch_size, shuffle=False,
+             num_workers=args.worker_count, pin_memory=True)
+    else:
+        test_loaderLMC = torch.utils.data.DataLoader(
+             UrbanSound8KDataset("UrbanSound8K_test.pkl", 'LMC'),
+             batch_size=args.batch_size, shuffle=False,
+             num_workers=args.worker_count, pin_memory=True)
+        test_loaderMC = torch.utils.data.DataLoader(
+             UrbanSound8KDataset("UrbanSound8K_test.pkl", 'MC'),
+             batch_size=args.batch_size, shuffle=False,
+             num_workers=args.worker_count, pin_memory=True)
 
     criterion = nn.CrossEntropyLoss()
 
@@ -172,7 +188,7 @@ def main(args):
         modelLMC.load_state_dict(torch.load("checkpoints/LMC.pth"))
         modelMC.load_state_dict(torch.load("checkpoints/MC.pth"))
 
-        tscnn(modelLMC, modelMC, test_loader, DEVICE)
+        tscnn(modelLMC, modelMC, test_loaderLMC, test_loaderMC, DEVICE)
         exit()
 
 
