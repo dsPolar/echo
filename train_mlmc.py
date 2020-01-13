@@ -476,12 +476,14 @@ class Trainer:
                 results["preds"].extend(list(preds))
                 results["labels"].extend(list(labels.cpu().numpy()))
 
-        accuracy = compute_accuracy(
-            np.array(results["labels"]), np.array(results["preds"])
-        )
+
         perclass = compute_perclass_accuracy(
             np.array(results["labels"]), np.array(results["preds"])
         )
+        accuracy = compute_accuracy(
+            np.array(results["labels"]), np.array(results["preds"])
+        )
+        accuracy2 = np.sum(perclass)/ 10.0
 
         average_loss = total_loss / len(self.val_loader)
 
@@ -507,6 +509,7 @@ class Trainer:
         print("Siren", perclass[8])
         print("Street Music", perclass[9])
         print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
+        print(f"accuracy perclass: {accuracy2 * 100:2.2f}")
         torch.save({
             'args': self.args,
             'model': self.model.state_dict(),
