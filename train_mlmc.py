@@ -232,7 +232,7 @@ class CNN(nn.Module):
         self.initialise_layer(self.hfc)
 
         self.normfc = nn.BatchNorm1d(
-            num_features = linear
+            num_features = 1024
         )
 
         self.fc1 = nn.Linear(1024, 10)
