@@ -93,10 +93,15 @@ else:
 
 def new_tscnn(trainerLMC, trainerMC):
     results = {"preds": [], "labels": []}
+    # Get logits and labels from LMC
     lmc_logits, lmc_labels = trainerLMC.validate()
+    # Get logits and labels from MC
     mc_logits, mc_labels  = trainerMC.validate()
+    # Sum the two
     logits = np.add(lmc_logits, mc_logits)
+    # Divide by two to average
     tscnn = np.divide(logits, 2.0)
+    # Take the argmax of average
     preds = np.argmax(tscnn, dim=-1)
     results["preds"]  = list(preds)
     results["labels"] = list(mc_labels.numpy())
@@ -166,8 +171,10 @@ def main(args):
         modelLMC = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=1)
         modelMC  = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=2)
 
+        # Load state from files
         modelLMC.load_state_dict(torch.load("checkpoints/LMC.pth"))
         modelMC.load_state_dict(torch.load("checkpoints/MC.pth"))
+        # Set up arbitrary optimizer to init trainers
         optimizer = optim.SGD(modelLMC.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=0.0001)
 
     if(mode != 'TSCNN'):
