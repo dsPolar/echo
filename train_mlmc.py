@@ -170,7 +170,8 @@ def main(args):
         modelMC.load_state_dict(torch.load("checkpoints/MC.pth"))
         optimizer = optim.SGD(modelLMC.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=0.0001)
 
-    optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=0.0001)
+    if(mode != 'TSCNN'):
+        optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=0.0001)
 
 
 
