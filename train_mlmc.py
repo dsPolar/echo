@@ -168,6 +168,7 @@ def main(args):
 
         modelLMC.load_state_dict(torch.load("checkpoints/LMC.pth"))
         modelMC.load_state_dict(torch.load("checkpoints/MC.pth"))
+        optimizer = optim.SGD(modelLMC.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=0.0001)
 
     optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=0.0001)
 
