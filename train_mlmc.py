@@ -99,6 +99,8 @@ def new_tscnn(trainerLMC, trainerMC):
     lmc_logits, lmc_labels = trainerLMC.validate()
     # Get logits and labels from MC
     mc_logits, mc_labels  = trainerMC.validate()
+    print(lmc_labels)
+    print(mc_labels)
     # Sum the two
     logits = np.add(lmc_logits, mc_logits)
     # Divide by two to average
