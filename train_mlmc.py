@@ -105,7 +105,7 @@ def new_tscnn(trainerLMC, trainerMC):
     tscnn = np.divide(logits, 2.0)
     # Take the argmax of average
     preds = np.argmax(tscnn)
-    results["preds"].extend(list(preds))
+    results["preds"] = preds.tolist()
     results["labels"].extend(list(mc_labels.numpy()))
 
     accuracy = compute_accuracy(
