@@ -99,14 +99,15 @@ def new_tscnn(trainerLMC, trainerMC):
     lmc_logits, lmc_labels = trainerLMC.validate()
     # Get logits and labels from MC
     mc_logits, mc_labels  = trainerMC.validate()
-    print(lmc_labels)
-    print(mc_labels)
+
     # Sum the two
     logits = np.add(lmc_logits, mc_logits)
     # Divide by two to average
     tscnn = np.divide(logits, 2.0)
+    print(tscnn)
     # Take the argmax of average
-    preds = np.argmax(tscnn)
+    preds = np.argmax(tscnn, axis=0)
+    print(preds)
     results["preds"] = preds.tolist()
     results["labels"] = mc_labels
 
