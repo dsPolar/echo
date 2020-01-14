@@ -170,8 +170,8 @@ def main(args):
         modelMC  = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout, mode=2)
 
         # Load state from files
-        modelLMC.load_state_dict(torch.load("checkpoints/LMC.pth"))
-        modelMC.load_state_dict(torch.load("checkpoints/MC.pth"))
+        modelLMC.load_state_dict(torch.load("LMC.pth"))
+        modelMC.load_state_dict(torch.load("MC.pth"))
         # Set up arbitrary optimizer to init trainers
         optimizer = optim.SGD(modelLMC.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=0.0001)
 
@@ -186,7 +186,7 @@ def main(args):
             str(log_dir),
             flush_secs=5
     )
-    f = open("checkpoints/" + str(mode) + ".pth", mode="wb")
+    f = open(str(mode) + ".pth", mode="wb")
     if mode == 'TSCNN':
         trainerLMC = Trainer(
             modelLMC, train_loader, test_loaderLMC, criterion, optimizer, summary_writer, DEVICE, args, f
