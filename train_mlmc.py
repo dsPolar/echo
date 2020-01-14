@@ -6,6 +6,7 @@ from typing import Union, NamedTuple
 import torch
 import torch.backends.cudnn
 import numpy as np
+import torchvision.datasets
 from torch import nn, optim
 from torch.nn import functional as F
 from torch.optim.optimizer import Optimizer
