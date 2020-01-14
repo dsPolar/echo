@@ -11,6 +11,7 @@ from torch.nn import functional as F
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+from torchvision import transforms
 
 from dataset import UrbanSound8KDataset
 
@@ -74,8 +75,8 @@ parser.add_argument(
     help="LMC, MC, MLMC",
 )
 parser.add_argument("--checkpoint-frequency", type=int, default=10, help="Save a checkpoint every N epochs")
-parser.add_argument("--resume", default=0, type=int)
-parser.add_argument("--resume-checkpoint", type=Path)
+parser.add_argument("--data-aug-brightness", default=0.15, type=float)
+
 
 
 
@@ -103,8 +104,8 @@ def new_tscnn(trainerLMC, trainerMC):
     tscnn = np.divide(logits, 2.0)
     # Take the argmax of average
     preds = np.argmax(tscnn, dim=-1)
-    results["preds"]  = list(preds)
-    results["labels"] = list(mc_labels.numpy())
+    results["preds"].extend(list(preds))
+    results["labels"].extend(list(mc_labels.numpy()))
 
     accuracy = compute_accuracy(
         np.array(results["labels"]), np.array(results["preds"])
@@ -132,11 +133,8 @@ def new_tscnn(trainerLMC, trainerMC):
 
 def main(args):
     mode = args.mode
-    if args.resume == 1:
-        if args.resume_checkpoint.exists():
-            state_dict = torch.load(args.resume_checkpoint)
-            print(f"Loading model from {args.resume_checkpoint}")
-            model.load_state_dict(state_dict)
+
+    transform = torchvision.transforms.ColorJitter(brightness=args.data_aug_brightness)
 
     train_loader = torch.utils.data.DataLoader(
           UrbanSound8KDataset("UrbanSound8K_train.pkl", mode),
