@@ -573,7 +573,6 @@ def get_summary_writer_log_dir(args: argparse.Namespace) -> str:
       f"bs={args.batch_size}_"
       f"lr={args.learning_rate}_"
       f"momentum=0.9_"
-      f"brightness={args.data_aug_brightness}_" +
       f"run_"
     )
     i = 0
