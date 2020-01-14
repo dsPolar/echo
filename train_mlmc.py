@@ -108,9 +108,9 @@ def new_tscnn(trainerLMC, trainerMC):
     results["preds"] = preds.tolist()
     results["labels"] = mc_labels
 
-    accuracy = compute_accuracy(
-        np.array(results["labels"]), np.array(results["preds"])
-    )
+    #accuracy = compute_accuracy(
+    #    np.array(results["labels"]), np.array(results["preds"])
+    #)
 
     perclass = compute_perclass_accuracy(
         np.array(results["labels"]), np.array(results["preds"])
@@ -126,7 +126,7 @@ def new_tscnn(trainerLMC, trainerMC):
     print("Jackhammer", perclass[7])
     print("Siren", perclass[8])
     print("Street Music", perclass[9])
-    print(f"accuracy: {accuracy * 100:2.2f}")
+    #print(f"accuracy: {accuracy * 100:2.2f}")
     print(f"accuracy perclass: {accuracy2 * 100:2.2f}")
 
 
