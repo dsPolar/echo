@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--log-dir", default=Path("logs"), type=Path)
 parser.add_argument("--learning-rate", default=1e-3, type=float, help="Learning rate")
 parser.add_argument("--momentum", default=0.9, type=float, help="Momentum Value")
-parser.add_argument("--dropout", default=0, type=float)
+parser.add_argument("--dropout", default=0.5, type=float)
 parser.add_argument(
     "--batch-size",
     default=32,
