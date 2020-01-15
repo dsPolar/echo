@@ -190,20 +190,19 @@ def main(args):
             str(log_dir),
             flush_secs=5
     )
-    f = open(str(mode) + ".pth", mode="wb")
     if mode == 'TSCNN':
         trainerLMC = Trainer(
-            modelLMC, train_loader, test_loaderLMC, criterion, optimizer, summary_writer, DEVICE, args, f
+            modelLMC, train_loader, test_loaderLMC, criterion, optimizer, summary_writer, DEVICE, args
         )
         trainerMC = Trainer(
-            modelMC, train_loader, test_loaderMC, criterion, optimizer, summary_writer, DEVICE, args, f
+            modelMC, train_loader, test_loaderMC, criterion, optimizer, summary_writer, DEVICE, args
         )
         new_tscnn(trainerLMC, trainerMC)
         summary_writer.close()
         exit()
     else:
         trainer = Trainer(
-            model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE, args, f
+            model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE, args
         )
 
     print("EPOCHS")
@@ -368,7 +367,7 @@ class Trainer:
         summary_writer: SummaryWriter,
         device: torch.device,
         args,
-        f,
+
     ):
         self.model = model.to(device)
         self.device = device
@@ -379,7 +378,6 @@ class Trainer:
         self.summary_writer = summary_writer
         self.step = 0
         self.args = args
-        self.file = f
 
     def train(
         self,
@@ -439,7 +437,9 @@ class Trainer:
                 self.validate()
                 self.model.train()
             if (epoch + 1) % self.args.checkpoint_frequency or (epoch + 1) == epochs:
-                torch.save(self.model.state_dict(), self.file)
+                f = open(str(args.mode) + ".pth", mode="wb")
+                torch.save(self.model.state_dict(), f)
+                f.close()
 
 
 
@@ -531,7 +531,9 @@ class Trainer:
         print("Street Music", perclass[9])
         print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
         print(f"accuracy perclass: {accuracy2 * 100:2.2f}")
-        torch.save(self.model.state_dict(), self.file)
+        f = open(str(args.mode) + ".pth", mode="wb")
+        torch.save(self.model.state_dict(), f)
+        f.close()
 
         return np.array(res_logits), results["labels"]
 
