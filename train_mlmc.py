@@ -437,7 +437,7 @@ class Trainer:
                 self.validate()
                 self.model.train()
             if (epoch + 1) % self.args.checkpoint_frequency or (epoch + 1) == epochs:
-                f = open(str(args.mode) + ".pth", mode="wb")
+                f = open(str(self.args.mode) + ".pth", mode="wb")
                 torch.save(self.model.state_dict(), f)
                 f.close()
 
@@ -531,7 +531,7 @@ class Trainer:
         print("Street Music", perclass[9])
         print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
         print(f"accuracy perclass: {accuracy2 * 100:2.2f}")
-        f = open(str(args.mode) + ".pth", mode="wb")
+        f = open(str(self.args.mode) + ".pth", mode="wb")
         torch.save(self.model.state_dict(), f)
         f.close()
 
