@@ -41,7 +41,7 @@ parser.add_argument(
 #Dima results are at 50 epochs
 parser.add_argument(
     "--epochs",
-    default=50,
+    default=100,
     type=int,
     help="Number of epochs (passes through the entire dataset) to train for",
 )
