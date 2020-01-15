@@ -531,11 +531,7 @@ class Trainer:
         print("Street Music", perclass[9])
         print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
         print(f"accuracy perclass: {accuracy2 * 100:2.2f}")
-        torch.save({
-            'args': self.args,
-            'model': self.model.state_dict(),
-            'accuracy': accuracy
-        }, self.file)
+        torch.save(self.model.state_dict(), self.file)
 
         return np.array(res_logits), results["labels"]
 
