@@ -214,7 +214,7 @@ def main(args):
         print_frequency=args.print_frequency,
         log_frequency=args.log_frequency,
     )
-    f.close()
+    
     summary_writer.close()
 
 
