@@ -106,7 +106,7 @@ def new_tscnn(trainerLMC, trainerMC):
     tscnn = np.divide(logits, 2.0)
     print(tscnn)
     # Take the argmax of average
-    preds = np.argmax(tscnn, axis=0)
+    preds = np.argmax(tscnn, axis=1)
     print(preds)
     results["preds"] = preds.tolist()
     results["labels"] = mc_labels
